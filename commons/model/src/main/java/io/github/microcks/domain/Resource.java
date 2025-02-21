@@ -37,6 +37,7 @@ public class Resource {
    private String sourceArtifact;
    private boolean mainArtifact = false;
    private Set<String> operations;
+   private String description;
 
    public String getId() {
       return id;
@@ -116,4 +117,13 @@ public class Resource {
       }
       operations.add(operation);
    }
+
+   public String getDescription() {
+      return description;
+   }
+
+   public void setDescription(String description) {
+      this.description = description;
+   }
+
 }

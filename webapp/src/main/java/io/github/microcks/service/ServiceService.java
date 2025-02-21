@@ -40,6 +40,7 @@ import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.repository.TestResultRepository;
 import io.github.microcks.security.AuthorizationChecker;
+import io.github.microcks.security.KeycloakTokenToUserInfoMapper;
 import io.github.microcks.security.UserInfo;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.EntityAlreadyExistsException;
@@ -52,6 +53,7 @@ import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.RelativeReferenceURLBuilder;
 import io.github.microcks.util.RelativeReferenceURLBuilderFactory;
 import io.github.microcks.util.ResourceUtil;
+import io.github.microcks.util.ai.AICopilot;
 import io.github.microcks.util.openapi.OpenAPISchemaBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -61,12 +63,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -98,6 +105,7 @@ public class ServiceService {
    @Value("${async-api.default-frequency}")
    private final Long defaultAsyncFrequency = 30l;
 
+   private AICopilot copilot;
 
    /**
     * Build a ServiceService with required dependencies.
@@ -115,7 +123,7 @@ public class ServiceService {
          GenericResourceRepository genericResourceRepository, RequestRepository requestRepository,
          ResponseRepository responseRepository, EventMessageRepository eventMessageRepository,
          TestResultRepository testResultRepository, ApplicationContext applicationContext,
-         AuthorizationChecker authorizationChecker) {
+         AuthorizationChecker authorizationChecker, AICopilot aiCopilot) {
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
       this.genericResourceRepository = genericResourceRepository;
@@ -125,6 +133,7 @@ public class ServiceService {
       this.testResultRepository = testResultRepository;
       this.applicationContext = applicationContext;
       this.authorizationChecker = authorizationChecker;
+      this.copilot = aiCopilot;
    }
 
    /**
@@ -305,6 +314,53 @@ public class ServiceService {
 
          // Publish a Service update event before returning.
          publishServiceChangeEvent(reference, serviceUpdate ? ChangeType.UPDATED : ChangeType.CREATED);
+
+         log.debug("We have a service, now looking for required contract...");
+         List<Resource> resources = null;
+         if (service.getType() == ServiceType.REST) {
+            resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.OPEN_API_SPEC);
+         } else if (service.getType() == ServiceType.GRAPHQL) {
+            resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.GRAPHQL_SCHEMA);
+         } else if (service.getType() == ServiceType.EVENT) {
+            resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.ASYNC_API_SPEC);
+         } else if (service.getType() == ServiceType.GRPC) {
+            resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.PROTOBUF_SCHEMA);
+         }
+
+         for (Operation operation : service.getOperations()) {
+            if (resources != null && !resources.isEmpty()) {
+               try {
+
+                  SecurityContext securityContext = SecurityContextHolder.getContext();
+                  if (securityContext.getAuthentication() != null) {
+                     log.debug("Found a Spring Security Authentication to map to UserInfo");
+                     // Create and store UserInfo in request attribute.
+                     UserInfo userInfo = KeycloakTokenToUserInfoMapper.map(securityContext);
+                     List<? extends Exchange> exchanges = copilot.suggestSampleExchanges(service, operation,
+                           resources.getFirst(), 2);
+
+                     boolean result = this.addExchangesToServiceOperation(service.getId(), operation.getName(),
+                           (List<Exchange>) exchanges, userInfo);
+                     if (!result) {
+                        log.error("Fail to register samples");
+                     } else {
+                        // Remove resources and messages previously attached to service.
+                        updateArtifactResources(reference, importer, service, artifactInfo);
+                        updateArtifactMessages(reference, importer, service, artifactInfo);
+
+                        // When extracting message information, we may have modified Operation because discovered new resource paths
+                        // depending on variable URI parts. As a consequence, we got to update Service in repository.
+                        serviceRepository.save(reference);
+                     }
+                  }
+
+               } catch (Exception e) {
+                  log.error("Caught and exception while generating samples", e);
+               }
+            }
+         }
+
+
       }
       log.info("Having imported {} services definitions into repository", services.size());
       return services;

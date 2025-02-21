@@ -509,7 +509,7 @@ public class RestController {
       for (Operation operation : service.getOperations()) {
          // Select operation based onto Http verb (GET, POST, PUT, etc ...)
          // ... then check is current resource path matches operation path pattern.
-         if (operation.getMethod().equals(method.name()) && operation.getResourcePaths() != null) {
+         if (operation.getMethod().equals(method.name())) {
             // Produce a matching regexp removing {part} and :part from pattern.
             String operationPattern = getURIPattern(operation.getName());
             //operationPattern = operationPattern.replaceAll("\\{.+\\}", "([^/])+");

@@ -34,6 +34,7 @@ public class Service {
    private ServiceType type;
    private Metadata metadata;
    private String sourceArtifact;
+   private String description;
 
    private List<Operation> operations = new ArrayList<>();
 
@@ -107,4 +108,13 @@ public class Service {
    public void setMetadata(Metadata metadata) {
       this.metadata = metadata;
    }
+
+   public String getDescription() {
+      return description;
+   }
+
+   public void setDescription(String description) {
+      this.description = description;
+   }
+
 }

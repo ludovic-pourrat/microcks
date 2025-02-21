@@ -187,9 +187,11 @@ public class OpenAICopilot implements AICopilot {
 
       // Build a prompt reusing templates and elements from AICopilotHelper.
       prompt.append("\n");
-      prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
+      prompt.append(AICopilotHelper.USE_DESCRIPTION_PROMPT);
+      prompt.append(contract.getDescription());
       prompt.append("\n");
-      prompt.append(AICopilotHelper.getRequestResponseExampleYamlFormattingDirective(1));
+      prompt.append(AICopilotHelper.getRequestResponseExampleYamlFormattingDirective());
+      prompt.append("\n");
       prompt.append(SECTION_DELIMITER);
       prompt.append(AICopilotHelper.removeTokensFromSpec(contract.getContent(), operation.getName()));
 
@@ -222,7 +224,7 @@ public class OpenAICopilot implements AICopilot {
       prompt.append("\n");
       prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
       prompt.append("\n");
-      prompt.append(AICopilotHelper.getRequestResponseExampleYamlFormattingDirective(1));
+      prompt.append(AICopilotHelper.getResponseExampleJsonFormattingDirective());
       prompt.append(SECTION_DELIMITER);
       prompt.append(contract.getContent());
 

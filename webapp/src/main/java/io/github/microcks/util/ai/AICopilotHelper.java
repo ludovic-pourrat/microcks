@@ -65,7 +65,9 @@ public class AICopilotHelper {
    protected static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory());
 
    protected static final String OPENAPI_OPERATION_PROMPT_TEMPLATE = """
-         Given the OpenAPI specification below, generate %2$d full examples (request and response) for operation '%1$s' strictly (no sub-path).
+         Given the OpenAPI specification below, generate as many request and response full examples as provided response codes (except the 500 one) for operation '%1$s' strictly (no sub-path).
+         Use URL encoded values for path parameters and query parameters.
+         Use only YAML format for examples output generation.
          """;
 
    protected static final String GRAPHQL_OPERATION_PROMPT_TEMPLATE = """
@@ -81,20 +83,28 @@ public class AICopilotHelper {
          """;
 
    protected static final String YAML_FORMATTING_PROMPT = """
-         Use only this YAML format for output (no other text or markdown):
+         Use only the provided YAML format for examples output generation:
          """;
+
+   protected static final String USE_DESCRIPTION_PROMPT = """
+         Use this API domain description to set the business context for generating on-purpose API examples:
+         """;
+
    protected static final String REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
-         - example: %1$d
+         - example: <meaningful example name>
            request:
              url: <request url>
              headers:
                accept: application/json
              body: <request body>
            response:
-             code: 200
+             code: <response code>
              headers:
                content-type: application/json
              body: <response body>
+         """;
+
+   protected static final String REQUEST_RESPONSE_EXAMPLE_JSON_FORMATTING_TEMPLATE = """
          """;
 
    protected static final String UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
@@ -147,12 +157,12 @@ public class AICopilotHelper {
       return String.format(GRPC_OPERATION_PROMPT_TEMPLATE, serviceName, operationName, numberOfSamples);
    }
 
-   protected static String getRequestResponseExampleYamlFormattingDirective(int numberOfSamples) {
-      StringBuilder builder = new StringBuilder();
-      for (int i = 0; i < numberOfSamples; i++) {
-         builder.append(String.format(REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE, i + 1));
-      }
-      return builder.toString();
+   protected static String getRequestResponseExampleYamlFormattingDirective() {
+      return REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE;
+   }
+
+   protected static String getResponseExampleJsonFormattingDirective() {
+      return REQUEST_RESPONSE_EXAMPLE_JSON_FORMATTING_TEMPLATE;
    }
 
    protected static String getUnidirectionalEventExampleYamlFormattingDirective(int numberOfSamples) {
@@ -473,7 +483,7 @@ public class AICopilotHelper {
       JsonNode pathsSpec = ((ObjectNode) specNode).get("paths");
       JsonNode pathSpec = ((ObjectNode) pathsSpec).get(path);
 
-      List<String> keysToKeepInRoot = List.of("openapi", "paths", "info");
+      List<String> keysToKeepInRoot = List.of("openapi", "paths");
       List<String> keysToKeepInPaths = List.of(path);
       List<String> keysToKeepInPath = List.of(verb);
 
@@ -489,7 +499,7 @@ public class AICopilotHelper {
 
       JsonNode channelsSpec = ((ObjectNode) specNode).get("channels");
 
-      List<String> keysToKeepInRoot = List.of("asyncapi", "channels", "info");
+      List<String> keysToKeepInRoot = List.of("asyncapi", "channels");
       List<String> keysToKeepInChannels = List.of(channel);
 
       removeTokensInNode(specNode, keysToKeepInRoot);

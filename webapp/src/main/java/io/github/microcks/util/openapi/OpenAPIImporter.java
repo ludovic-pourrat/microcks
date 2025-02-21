@@ -100,6 +100,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       Service service = new Service();
       service.setName(rootSpecification.path("info").path("title").asText());
       service.setVersion(rootSpecification.path("info").path("version").asText());
+      service.setDescription(rootSpecification.path("info").path("description").asText());
       service.setType(ServiceType.REST);
 
       // Complete metadata if specified via extension.
@@ -135,6 +136,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       // Build a brand-new resource just with spec content.
       Resource resource = new Resource();
       resource.setName(name);
+      resource.setDescription(service.getDescription());
       resource.setType(ResourceType.OPEN_API_SPEC);
       results.add(resource);
       // Set the content of main OpenAPI that may have been updated with normalized dependencies with initializeReferencedResources().
