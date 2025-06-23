@@ -37,6 +37,15 @@ public class Resource {
    private String sourceArtifact;
    private boolean mainArtifact = false;
    private Set<String> operations;
+   private String prompt;
+
+   public String getPrompt() {
+      return prompt;
+   }
+
+   public void setPrompt(String prompt) {
+      this.prompt = prompt;
+   }
 
    public String getId() {
       return id;
@@ -116,4 +125,6 @@ public class Resource {
       }
       operations.add(operation);
    }
+
+
 }
