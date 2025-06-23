@@ -34,11 +34,13 @@ public class Operation {
    private String outputName;
    private Map<String, Binding> bindings;
 
+   private Map<String, String> extensions;
+
    private boolean override = false;
    private String dispatcher;
    private String dispatcherRules;
    private Long defaultDelay;
-
+   private String prompt;
    private Set<String> resourcePaths;
    private Set<ParameterConstraint> parameterConstraints;
 
@@ -160,4 +162,13 @@ public class Operation {
       }
       parameterConstraints.add(constraint);
    }
+
+   public String getPrompt() {
+      return prompt;
+   }
+
+   public void setPrompt(String prompt) {
+      this.prompt = prompt;
+   }
+
 }
