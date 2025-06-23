@@ -220,6 +220,8 @@ public class OpenAICopilot implements AICopilot {
 
       // Build a prompt reusing templates and elements from AICopilotHelper.
       prompt.append("\n");
+      prompt.append("Use today's date ").append(java.time.LocalDate.now()).append(" as the date of the examples you generate, so that they are realistic and up to date");
+      prompt.append("\n");
       prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
       prompt.append("\n");
 
