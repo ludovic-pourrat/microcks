@@ -32,6 +32,7 @@ import com.theokanning.openai.completion.chat.ChatCompletionResult;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.completion.chat.ChatMessageRole;
 
+import io.github.microcks.util.metadata.MetadataExtensions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -49,34 +50,51 @@ import java.util.Map;
 
 /**
  * This is an implementation of {@code AICopilot} using OpenAI API.
+ *
  * @author laurent
  */
 public class OpenAICopilot implements AICopilot {
 
-   /** A simple logger for diagnostic messages. */
+   /**
+    * A simple logger for diagnostic messages.
+    */
    private static final Logger log = LoggerFactory.getLogger(OpenAICopilot.class);
 
 
-   /** Configuration parameter holding the OpenAI API key. */
+   /**
+    * Configuration parameter holding the OpenAI API key.
+    */
    public static final String API_KEY_CONFIG = "api-key";
 
-   /** Configuration parameter holding the OpenAI API URL. */
+   /**
+    * Configuration parameter holding the OpenAI API URL.
+    */
    public static final String API_URL_CONFIG = "api-url";
 
-   /** Configuration parameters holding the timeout in seconds for API calls. */
+   /**
+    * Configuration parameters holding the timeout in seconds for API calls.
+    */
    public static final String TIMEOUT_KEY_CONFIG = "timeout";
 
-   /** Configuration parameter holding the name of model to use. */
+   /**
+    * Configuration parameter holding the name of model to use.
+    */
    public static final String MODEL_KEY_CONFIG = "model";
 
-   /** Configuration parameter holding the maximum number of tokens to use. */
+   /**
+    * Configuration parameter holding the maximum number of tokens to use.
+    */
    public static final String MAX_TOKENS_KEY_CONFIG = "maxTokens";
 
-   /** The mandatory configuration keys required by this implementation. */
+   /**
+    * The mandatory configuration keys required by this implementation.
+    */
    protected static final String[] MANDATORY_CONFIG_KEYS = { API_KEY_CONFIG };
 
 
-   /** Default online URL for OpenAI API. */
+   /**
+    * Default online URL for OpenAI API.
+    */
    private static final String OPENAI_BASE_URL = "https://api.openai.com/";
 
    private static final String SECTION_DELIMITER = "\n#####\n";
@@ -96,6 +114,7 @@ public class OpenAICopilot implements AICopilot {
 
    /**
     * Build a new OpenAICopilot with its configuration.
+    *
     * @param configuration The configuration for connecting to OpenAI services.
     */
    public OpenAICopilot(Map<String, String> configuration) {
@@ -130,6 +149,7 @@ public class OpenAICopilot implements AICopilot {
 
    /**
     * Get mandatory configuration parameters.
+    *
     * @return The mandatory configuration keys required by this implementation
     */
    public static final String[] getMandatoryConfigKeys() {
@@ -164,7 +184,7 @@ public class OpenAICopilot implements AICopilot {
       HttpEntity<ChatCompletionRequest> request = new HttpEntity<>(chatCompletionRequest,
             createAuthenticationHeaders());
       ChatCompletionResult completionResult = restTemplate
-            .exchange(apiUrl + "/v1/chat/completions", HttpMethod.POST, request, ChatCompletionResult.class).getBody();
+            .exchange(apiUrl, HttpMethod.POST, request, ChatCompletionResult.class).getBody();
 
       if (completionResult != null) {
          ChatCompletionChoice choice = completionResult.getChoices().get(0);
@@ -185,10 +205,24 @@ public class OpenAICopilot implements AICopilot {
       StringBuilder prompt = new StringBuilder(
             AICopilotHelper.getOpenAPIOperationPromptIntro(operation.getName(), number));
 
+      if (contract.getPrompt() != null) {
+         prompt.append("\n");
+         prompt.append(AICopilotHelper.USE_COPILOT_PROMPT);
+         prompt.append("\n");
+         prompt.append(contract.getPrompt());
+         if (operation.getPrompt() != null) {
+            prompt.append("\n");
+            prompt.append(operation.getPrompt());
+            prompt.append("\n");
+         }
+         prompt.append("\n");
+      }
+
       // Build a prompt reusing templates and elements from AICopilotHelper.
       prompt.append("\n");
       prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
       prompt.append("\n");
+
       prompt.append(AICopilotHelper.getRequestResponseExampleYamlFormattingDirective(number));
       prompt.append(SECTION_DELIMITER);
       prompt.append(AICopilotHelper.removeTokensFromSpec(contract.getContent(), operation.getName()));
