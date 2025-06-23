@@ -89,11 +89,15 @@ public class AICopilotHelper {
          """
          + REALISTIC_AND_VALID_EXAMPLES_PROMPT;
 
+   protected static final String USE_COPILOT_PROMPT = """
+         Use those instructions on to set the business context for generating on-purpose and contextful API examples:
+         """;
+
    protected static final String YAML_FORMATTING_PROMPT = """
-         Use only the provided YAML format to output the list of examples (no other text or markdown):
+         Use only the provided YAML format to output the list of examples (no other text or markdown), and put some quotes around the field values :
          """;
    protected static final String REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
-         - example: <meaningful example %1$d name>
+         - example: <meaningful example %1$d name >
            request:
              url: <request url>
              headers:
@@ -592,7 +596,7 @@ public class AICopilotHelper {
       JsonNode pathsSpec = ((ObjectNode) specNode).get("paths");
       JsonNode pathSpec = ((ObjectNode) pathsSpec).get(path);
 
-      List<String> keysToKeepInRoot = List.of("openapi", "paths", "info");
+      List<String> keysToKeepInRoot = List.of("openapi", "paths");
       List<String> keysToKeepInPaths = List.of(path);
       List<String> keysToKeepInPath = List.of(verb);
 
