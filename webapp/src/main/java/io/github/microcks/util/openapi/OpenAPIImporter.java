@@ -110,6 +110,13 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          service.setMetadata(metadata);
       }
 
+      // Complete AI copilot prompt
+      if (rootSpecification.path("info").has(MetadataExtensions.MICROCKS_AI_COPILOT_PROMPT_EXTENSION)) {
+         String prompt = rootSpecification.path("info").path(MetadataExtensions.MICROCKS_AI_COPILOT_PROMPT_EXTENSION)
+               .asText();
+         service.setPrompt(prompt);
+      }
+
       // Before extraction operations, we need to get and build external reference if we have a resolver.
       initializeReferencedResources(service);
 
@@ -136,6 +143,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       Resource resource = new Resource();
       resource.setName(name);
       resource.setType(ResourceType.OPEN_API_SPEC);
+      resource.setPrompt(service.getPrompt());
       results.add(resource);
       // Set the content of main OpenAPI that may have been updated with normalized dependencies with initializeReferencedResources().
       resource.setContent(rootSpecificationContent);
@@ -247,6 +255,12 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                if (verb.getValue().has(MetadataExtensions.MICROCKS_OPERATION_EXTENSION)) {
                   MetadataExtractor.completeOperationProperties(operation,
                         verb.getValue().path(MetadataExtensions.MICROCKS_OPERATION_EXTENSION));
+               }
+
+               // Complete operation extensions if any.
+               if (verb.getValue().has(MetadataExtensions.MICROCKS_AI_COPILOT_PROMPT_EXTENSION)) {
+                  operation.setPrompt(
+                        verb.getValue().path(MetadataExtensions.MICROCKS_AI_COPILOT_PROMPT_EXTENSION).asText());
                }
 
                // Deal with dispatcher stuffs if needed.
