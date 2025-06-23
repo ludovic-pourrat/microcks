@@ -35,6 +35,16 @@ public class Service {
    private Metadata metadata;
    private String sourceArtifact;
 
+   public String getPrompt() {
+      return prompt;
+   }
+
+   public void setPrompt(String prompt) {
+      this.prompt = prompt;
+   }
+
+   private String prompt;
+
    private List<Operation> operations = new ArrayList<>();
 
    public String getId() {
