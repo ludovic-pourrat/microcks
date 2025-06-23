@@ -39,15 +39,7 @@ import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * This helper class holds general utility constants and methods for:
@@ -93,8 +85,7 @@ public class AICopilotHelper {
          Use those instructions on to set the business context for generating on-purpose and contextful API examples:
          """;
 
-  protected static final String YAML_FORMATTING_PROMPT = """
-         Use today date as the date for the generated examples, and use a realistic time (e.g. 10:00 AM) for the time of day.
+   protected static final String YAML_FORMATTING_PROMPT = """
          Use only the provided YAML format to output the list of examples (no other text or markdown), and enclose with quotes generated YAML field values :
          """;
 
