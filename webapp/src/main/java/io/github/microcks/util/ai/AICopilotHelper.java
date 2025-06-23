@@ -93,11 +93,13 @@ public class AICopilotHelper {
          Use those instructions on to set the business context for generating on-purpose and contextful API examples:
          """;
 
-   protected static final String YAML_FORMATTING_PROMPT = """
-         Use only the provided YAML format to output the list of examples (no other text or markdown), and put some quotes around the field values :
+  protected static final String YAML_FORMATTING_PROMPT = """
+         Use today date as the date for the generated examples, and use a realistic time (e.g. 10:00 AM) for the time of day.
+         Use only the provided YAML format to output the list of examples (no other text or markdown), and enclose with quotes generated YAML field values :
          """;
+
    protected static final String REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
-         - example: <meaningful example %1$d name >
+         - example: <human readeable meaningful example %1$d name >
            request:
              url: <request url>
              headers:
@@ -112,7 +114,7 @@ public class AICopilotHelper {
              body: <response body>
          """;
    protected static final String UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
-         - example: <meaningful example %1$d name>
+         - example: <human readeable meaningful example %1$d name>
            message:
              headers:
                <header_name>: <value 1>
@@ -120,7 +122,7 @@ public class AICopilotHelper {
          """;
 
    protected static final String GRPC_REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
-         - example: <meaningful example %1$d name>
+         - example: <human readeable meaningful example %1$d name>
            request:
              body: <request body in JSON>
            response:
